@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0713" />
+    <meta name="description" content="Athena Core — interfaz de chat conectada a tu motor semántico." />
+
+    <!--
+      Favicon: búho minimalista de dos colores planos (sin gradientes),
+      es el mismo trazo que se usa en la pantalla de carga de abajo.
+      Va como SVG embebido para que este archivo sea autocontenido.
+    -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%234C1D95'/%3E%3Cpath d='M31 32 L38 14 L45 32 Z' fill='%23F1EAFB'/%3E%3Cpath d='M55 32 L62 14 L69 32 Z' fill='%23F1EAFB'/%3E%3Ccircle cx='50' cy='48' r='21' fill='%23F1EAFB'/%3E%3Ccircle cx='41' cy='46' r='6.5' fill='%234C1D95'/%3E%3Ccircle cx='59' cy='46' r='6.5' fill='%234C1D95'/%3E%3Ccircle cx='41' cy='46' r='2.6' fill='%23F1EAFB'/%3E%3Ccircle cx='59' cy='46' r='2.6' fill='%23F1EAFB'/%3E%3Cpath d='M47 54 L53 54 L50 61 Z' fill='%234C1D95'/%3E%3C/svg%3E"
+    />
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%234C1D95'/%3E%3Cpath d='M31 32 L38 14 L45 32 Z' fill='%23F1EAFB'/%3E%3Cpath d='M55 32 L62 14 L69 32 Z' fill='%23F1EAFB'/%3E%3Ccircle cx='50' cy='48' r='21' fill='%23F1EAFB'/%3E%3Ccircle cx='41' cy='46' r='6.5' fill='%234C1D95'/%3E%3Ccircle cx='59' cy='46' r='6.5' fill='%234C1D95'/%3E%3Ccircle cx='41' cy='46' r='2.6' fill='%23F1EAFB'/%3E%3Ccircle cx='59' cy='46' r='2.6' fill='%23F1EAFB'/%3E%3Cpath d='M47 54 L53 54 L50 61 Z' fill='%234C1D95'/%3E%3C/svg%3E" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <title>Athena Core</title>
+
+    <!--
+      Aplica el tema guardado ANTES de pintar, para que no haya
+      parpadeo (flash) de tema claro/oscuro al cargar la app.
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("athena_theme");
+          document.documentElement.setAttribute("data-theme", saved === "light" ? "light" : "dark");
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
+
+    <!--
+      Estilos críticos de la pantalla de carga, embebidos aquí para
+      que se muestren de inmediato (antes de que cargue el bundle de
+      React y el index.css de la app). Fondo de un solo color plano,
+      estilo icono de iPhone, con el búho "latiendo" mientras carga.
+    -->
+    <style>
+      #ac-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: #0a0713; /* color entero, sin degradado */
+        transition: opacity 0.45s ease, visibility 0.45s ease;
+      }
+      html[data-theme="light"] #ac-splash {
+        background: #efe9fb;
+      }
+      #ac-splash.ac-splash--out {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      #ac-splash__mark {
+        width: 84px;
+        height: 84px;
+        border-radius: 22px;
+        filter: drop-shadow(0 0 22px rgba(124, 58, 237, 0.55));
+        animation: ac-splash-beat 1.4s ease-in-out infinite;
+      }
+      #ac-splash__label {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: #cabdf0;
+      }
+      @keyframes ac-splash-beat {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        25% {
+          transform: scale(1.08);
+        }
+        45% {
+          transform: scale(0.97);
+        }
+        65% {
+          transform: scale(1.04);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #ac-splash__mark {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Pantalla de carga: se retira sola en cuanto React monta la app en #root -->
+    <div id="ac-splash" aria-hidden="true">
+      <svg id="ac-splash__mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="22" fill="#4C1D95" />
+        <path d="M31 32 L38 14 L45 32 Z" fill="#F1EAFB" />
+        <path d="M55 32 L62 14 L69 32 Z" fill="#F1EAFB" />
+        <circle cx="50" cy="48" r="21" fill="#F1EAFB" />
+        <circle cx="41" cy="46" r="6.5" fill="#4C1D95" />
+        <circle cx="59" cy="46" r="6.5" fill="#4C1D95" />
+        <circle cx="41" cy="46" r="2.6" fill="#F1EAFB" />
+        <circle cx="59" cy="46" r="2.6" fill="#F1EAFB" />
+        <path d="M47 54 L53 54 L50 61 Z" fill="#4C1D95" />
+      </svg>
+      <span id="ac-splash__label">Athena Core</span>
+    </div>
+
+    <script type="module" src="/src/main.jsx"></script>
+
+    <script>
+      // Retira la pantalla de carga en cuanto React haya insertado la app real
+      // dentro de #root (nada de un temporizador fijo e inventado).
+      (function () {
+        var splash = document.getElementById("ac-splash");
+        var root = document.getElementById("root");
+        if (!splash || !root) return;
+
+        var remove = function () {
+          splash.classList.add("ac-splash--out");
+          setTimeout(function () {
+            splash.remove();
+          }, 500);
+        };
+
+        if (root.childElementCount > 0) {
+          remove();
+          return;
+        }
+
+        var observer = new MutationObserver(function () {
+          if (root.childElementCount > 0) {
+            observer.disconnect();
+            remove();
+          }
+        });
+        observer.observe(root, { childList: true });
+
+        // Salvaguarda: si algo falla, no dejar la pantalla de carga para siempre.
+        setTimeout(remove, 8000);
+      })();
+    </script>
+  </body>
+</html>
